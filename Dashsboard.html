@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentinelOps | Plataforma SaaS Completa</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5B0D1A', secondary: '#0D3B4A', accent: '#00B2A9',
+                        success: '#16A34A', warning: '#F59E0B', danger: '#DC2626',
+                        background: '#F6F7F9', surface: '#FFFFFF',
+                        textmain: '#111827', textsec: '#6B7280', sidebar: '#420812',
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['Fira Code', 'monospace'] },
+                    boxShadow: { 'card': '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)' }
+                }
+            }
+        }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-background text-textmain font-sans antialiased h-screen overflow-hidden">
+
+    <!-- ==========================================
+         VISTA DE LOGIN (Fidelidad Completa)
+         ========================================== -->
+    <div id="login-view" class="h-full flex items-center justify-center relative overflow-hidden bg-background">
+        <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-primary rounded-full mix-blend-multiply blur-[100px] opacity-10 translate-x-1/2 -translate-y-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent rounded-full mix-blend-multiply blur-[100px] opacity-10 -translate-x-1/2 translate-y-1/2"></div>
+
+        <div class="bg-surface p-8 sm:p-10 rounded-2xl shadow-card w-full max-w-md border border-gray-100 relative z-10">
+            <div class="flex items-center justify-center gap-2 mb-8">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
+                <span class="text-2xl font-bold text-primary">Sentinel<span class="text-textmain">Ops</span></span>
+            </div>
+            <h2 class="text-xl font-bold text-center mb-2">Bienvenido de nuevo</h2>
+            <p class="text-sm text-textsec text-center mb-8">Inicia sesión para monitorear tu superficie de ataque.</p>
+
+            <form id="login-form" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-textmain mb-1">Correo electrónico</label>
+                    <input type="email" value="carlos@pyme.dev" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent outline-none text-sm transition">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-sm font-medium text-textmain">Contraseña</label>
+                        <a href="#" class="text-xs text-accent hover:underline font-medium">¿Olvidaste tu contraseña?</a>
+                    </div>
+                    <input type="password" value="********" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent outline-none text-sm transition">
+                </div>
+                <button type="submit" id="btn-login" class="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-2.5 rounded-lg transition shadow-sm mt-4">Iniciar sesión</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         APLICACIÓN SAAS MAIN
+         ========================================== -->
+    <div id="app-view" class="hidden h-full w-full flex">
+        
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-sidebar text-gray-300 flex flex-col z-20 shadow-xl shrink-0">
+            <div class="h-16 flex items-center px-6 bg-primary border-b border-white/10">
+                <i data-lucide="shield-check" class="w-6 h-6 text-white mr-2"></i>
+                <span class="text-lg font-bold text-white">SentinelOps</span>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto py-6 px-3 space-y-1 no-scrollbar">
+                <button onclick="switchView('dashboard', 'Resumen')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-white/10 border-l-4 border-accent text-white font-medium hover:bg-white/20 transition">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> <span class="text-sm">Resumen</span>
+                </button>
+
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 px-3 mt-6 mb-2">Gestión</p>
+                <button onclick="switchView('activos', 'Inventario de Activos')" id="nav-activos" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 hover:text-white transition">
+                    <i data-lucide="box" class="w-5 h-5"></i> <span class="text-sm">Activos</span>
+                </button>
+                <button onclick="switchView('view-scan', 'Ejecutar Análisis')" id="nav-view-scan" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 hover:text-white transition">
+                    <i data-lucide="zap" class="w-5 h-5 text-white"></i> <span class="text-sm">Escaneos</span>
+                </button>
+                <button onclick="switchView('hallazgos', 'Gestión de Hallazgos')" id="nav-hallazgos" class="nav-btn w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/10 hover:text-white transition">
+                    <div class="flex items-center gap-3"><i data-lucide="alert-triangle" class="w-5 h-5 text-danger"></i> <span class="text-sm">Hallazgos</span></div>
+                    <span class="bg-danger text-white text-[10px] font-bold px-1.5 rounded-full">23</span>
+                </button>
+                <button onclick="switchView('regresiones', 'Control de Regresiones')" id="nav-regresiones" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 hover:text-white transition">
+                    <i data-lucide="activity" class="w-5 h-5 text-warning"></i> <span class="text-sm">Regresiones</span>
+                </button>
+
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 px-3 mt-6 mb-2">Automatización</p>
+                <button onclick="switchView('n8n', 'Workflows n8n')" id="nav-n8n" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 hover:text-white transition">
+                    <i data-lucide="git-merge" class="w-5 h-5 text-accent"></i> <span class="text-sm text-accent font-medium">Workflows n8n</span>
+                </button>
+                <button onclick="switchView('view-pro', 'Automatización PRO')" id="nav-view-pro" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 hover:text-white transition">
+                    <i data-lucide="calendar-clock" class="w-5 h-5 text-warning"></i> <span class="text-sm">Programación PRO</span>
+                </button>
+                <button onclick="switchView('integraciones', 'Integraciones')" id="nav-integraciones" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 hover:text-white transition">
+                    <i data-lucide="plug" class="w-5 h-5"></i> <span class="text-sm">Integraciones</span>
+                </button>
+
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 px-3 mt-6 mb-2">Avanzado</p>
+                <button onclick="switchView('view-enterprise', 'SDK Enterprise')" id="nav-view-enterprise" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 hover:text-white transition">
+                    <i data-lucide="server" class="w-5 h-5"></i> <span class="text-sm">Agente SDK</span>
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-white/10">
+                <button onclick="switchView('perfil', 'Mi Perfil')" class="w-full flex items-center justify-between bg-black/20 hover:bg-black/30 p-2 rounded-lg transition border border-white/5">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 bg-gradient-to-tr from-secondary to-accent rounded text-white flex items-center justify-center font-bold text-xs">AC</div>
+                        <div class="text-left"><p class="text-xs font-semibold text-white leading-tight">Acme Corp</p><p class="text-[10px] text-gray-400">Plan PRO</p></div>
+                    </div>
+                    <i data-lucide="chevrons-up-down" class="w-4 h-4 text-gray-400"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="flex-1 flex flex-col min-w-0 bg-background relative overflow-hidden">
+            
+            <!-- TOPBAR (Full design) -->
+            <header class="h-16 bg-surface border-b border-gray-200 flex items-center justify-between px-6 lg:px-8 shrink-0 z-10">
+                <div>
+                    <h1 id="topbar-title" class="text-xl font-semibold text-textmain tracking-tight">Resumen</h1>
+                    <p id="topbar-subtitle" class="text-xs text-textsec">Vista general de tu postura de seguridad</p>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <button class="hidden sm:flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-textsec hover:bg-gray-50 transition">
+                        <i data-lucide="calendar" class="w-4 h-4"></i> Últimos 7 días
+                    </button>
+                    <button class="flex items-center gap-2 px-3 py-1.5 bg-secondary text-white rounded-lg text-sm font-medium hover:bg-secondary/90 transition shadow-sm">
+                        <i data-lucide="download" class="w-4 h-4"></i> Exportar
+                    </button>
+                    <div class="w-px h-6 bg-gray-200 mx-1"></div>
+                    <button onclick="switchView('alertas', 'Centro de Alertas')" class="relative text-gray-400 hover:text-textmain transition">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-danger rounded-full border border-white"></span>
+                    </button>
+                    <div class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-300 cursor-pointer" onclick="switchView('perfil', 'Mi Perfil')">
+                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Carlos" alt="Avatar" class="w-full h-full object-cover">
+                    </div>
+                </div>
+            </header>
+
+            <!-- CONTENEDOR DE VISTAS (Scrollable) -->
+            <div class="flex-1 overflow-y-auto p-6 lg:p-8 relative">
+
+                <!-- 1. DASHBOARD PRINCIPAL (Completo) -->
+                <div id="dashboard" class="view-section fade-in block">
+                    <!-- KPIs -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                        <div class="bg-surface rounded-xl p-5 border border-gray-100 shadow-card flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-textsec flex items-center gap-1">Score de riesgo <i data-lucide="info" class="w-3 h-3"></i></p>
+                                <div class="flex items-end gap-2 mt-1"><span class="text-3xl font-bold text-textmain">72</span><span class="text-sm text-textsec mb-1">/100</span></div>
+                                <p class="text-xs text-warning font-medium mt-1 flex items-center gap-1"><i data-lucide="arrow-up" class="w-3 h-3"></i> 14 pts (Riesgo Medio)</p>
+                            </div>
+                            <div class="w-16 h-16 rounded-full border-4 border-gray-100 border-t-warning border-r-warning transform rotate-45"></div>
+                        </div>
+                        <div class="bg-surface rounded-xl p-5 border border-gray-100 shadow-card flex flex-col justify-between">
+                            <p class="text-sm font-medium text-textsec">Activos monitoreados</p>
+                            <div><span class="text-3xl font-bold text-textmain">42</span><p class="text-xs text-success font-medium mt-1 flex items-center gap-1"><i data-lucide="arrow-up" class="w-3 h-3"></i> 3 nuevos activos</p></div>
+                        </div>
+                        <div class="bg-surface rounded-xl p-5 border border-gray-100 shadow-card flex flex-col justify-between">
+                            <p class="text-sm font-medium text-textsec">Escaneos semana</p>
+                            <div><span class="text-3xl font-bold text-textmain">18</span><p class="text-xs text-success font-medium mt-1 flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> 5 completados hoy</p></div>
+                        </div>
+                        <div class="bg-surface rounded-xl p-5 border border-gray-100 shadow-card flex flex-col justify-between">
+                            <p class="text-sm font-medium text-textsec flex items-center gap-1">Hallazgos críticos <span class="w-2 h-2 rounded-full bg-danger"></span></p>
+                            <div><span class="text-3xl font-bold text-textmain">4</span><p class="text-xs text-success font-medium mt-1 flex items-center gap-1"><i data-lucide="arrow-down" class="w-3 h-3"></i> 2 desde la semana ant.</p></div>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <div class="lg:col-span-2 bg-surface rounded-xl border border-gray-100 shadow-card p-5">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-base font-semibold text-textmain">Tendencia de riesgo</h3>
+                                <button class="text-textsec hover:text-primary"><i data-lucide="more-horizontal" class="w-5 h-5"></i></button>
+                            </div>
+                            <div class="relative h-64 w-full"><canvas id="trendChart"></canvas></div>
+                        </div>
+                        <div class="bg-surface rounded-xl border border-gray-100 shadow-card p-5">
+                            <h3 class="text-base font-semibold text-textmain mb-4">Hallazgos por severidad</h3>
+                            <div class="relative h-48 w-full flex justify-center items-center">
+                                <canvas id="severityChart"></canvas>
+                                <div class="absolute flex flex-col items-center"><span class="text-3xl font-bold text-textmain">186</span><span class="text-xs text-textsec">Total</span></div>
+                            </div>
+                            <div class="mt-4 grid grid-cols-2 gap-2 text-sm">
+                                <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-danger"></span> Crítico</div> <span class="font-semibold">4</span></div>
+                                <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-warning"></span> Alto</div> <span class="font-semibold">28</span></div>
+                                <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span> Medio</div> <span class="font-semibold">68</span></div>
+                                <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-success"></span> Bajo</div> <span class="font-semibold">86</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tablas (Hallazgos y Webhooks) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-surface rounded-xl border border-gray-100 shadow-card overflow-hidden flex flex-col">
+                            <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+                                <h3 class="text-base font-semibold text-textmain">Hallazgos prioritarios</h3>
+                                <button onclick="switchView('hallazgos', 'Gestión de Hallazgos')" class="text-xs text-accent font-medium hover:underline">Ver todos</button>
+                            </div>
+                            <div class="flex-1 overflow-x-auto">
+                                <table class="w-full text-left text-sm text-textsec">
+                                    <thead class="bg-gray-50/50 text-xs uppercase font-semibold text-gray-500">
+                                        <tr><th class="px-5 py-3">Hallazgo</th><th class="px-5 py-3">Proyecto</th><th class="px-5 py-3 text-right">Acción</th></tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        <tr class="hover:bg-gray-50 transition">
+                                            <td class="px-5 py-4">
+                                                <div class="flex items-center gap-3"><div class="px-2 py-1 rounded border border-danger text-danger text-[10px] font-bold uppercase flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-danger"></div> Crítico</div><span class="font-medium text-textmain">SQL Injection</span></div>
+                                                <p class="text-[11px] text-gray-400 mt-1 ml-16">api/users.py:128</p>
+                                            </td>
+                                            <td class="px-5 py-4 font-medium">api-backend</td>
+                                            <td class="px-5 py-4 text-right"><button onclick="switchView('view-finding', 'Fix Coach')" class="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-100 transition flex items-center gap-1 ml-auto">Fix <i data-lucide="wrench" class="w-3 h-3 text-accent"></i></button></td>
+                                        </tr>
+                                        <tr class="hover:bg-gray-50 transition">
+                                            <td class="px-5 py-4">
+                                                <div class="flex items-center gap-3"><div class="px-2 py-1 rounded border border-danger text-danger text-[10px] font-bold uppercase flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-danger"></div> Crítico</div><span class="font-medium text-textmain">Hardcoded Secret</span></div>
+                                                <p class="text-[11px] text-gray-400 mt-1 ml-16">.env</p>
+                                            </td>
+                                            <td class="px-5 py-4 font-medium">payments-svc</td>
+                                            <td class="px-5 py-4 text-right"><button onclick="switchView('view-finding', 'Fix Coach')" class="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-100 transition flex items-center gap-1 ml-auto">Fix <i data-lucide="wrench" class="w-3 h-3 text-accent"></i></button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="bg-surface rounded-xl border border-gray-100 shadow-card overflow-hidden flex flex-col">
+                            <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+                                <h3 class="text-base font-semibold text-textmain">Monitoreo activo (n8n & Repos)</h3>
+                                <button onclick="switchView('activos', 'Inventario de Activos')" class="text-xs text-accent font-medium hover:underline">Configurar</button>
+                            </div>
+                            <div class="p-2">
+                                <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition border-b border-gray-50">
+                                    <div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center"><i data-lucide="git-branch" class="w-4 h-4"></i></div><div><p class="text-sm font-semibold text-textmain">api.acme.com</p><p class="text-[11px] text-gray-500">GitHub · main branch</p></div></div>
+                                    <div class="flex flex-col items-end"><span class="text-xs font-medium text-success flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Seguro</span><span class="text-[10px] text-gray-400">Escaneado hoy, 09:15</span></div>
+                                </div>
+                                <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition border-b border-gray-50">
+                                    <div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center"><i data-lucide="webhook" class="w-4 h-4"></i></div><div><p class="text-sm font-semibold text-textmain">n8n Lead Workflow</p><p class="text-[11px] text-gray-500">Webhook de producción</p></div></div>
+                                    <div class="flex flex-col items-end"><span class="text-xs font-medium text-warning flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> Revisión req.</span><span class="text-[10px] text-gray-400">Escaneado ayer, 18:42</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. INVENTARIO DE ACTIVOS -->
+                <div id="activos" class="view-section fade-in hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="relative w-72"><i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i><input type="text" placeholder="Buscar repos, webhooks..." class="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent outline-none"></div>
+                        <button class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Añadir Activo</button>
+                    </div>
+                    <div class="bg-surface border border-gray-100 rounded-xl shadow-card overflow-hidden">
+                        <table class="w-full text-left text-sm text-textsec">
+                            <thead class="bg-gray-50 text-xs uppercase font-semibold text-gray-500">
+                                <tr><th class="px-6 py-4">Nombre del Activo</th><th class="px-6 py-4">Tipo</th><th class="px-6 py-4">Estado</th><th class="px-6 py-4">Último Escaneo</th><th class="px-6 py-4"></th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 font-medium text-textmain flex items-center gap-3"><i data-lucide="github" class="w-4 h-4"></i> acme/payments-api</td><td class="px-6 py-4">Repositorio Git</td>
+                                    <td class="px-6 py-4"><span class="px-2 py-1 bg-success/10 text-success text-xs font-semibold rounded-full border border-success/20">Verificado</span></td>
+                                    <td class="px-6 py-4 text-xs">Hoy, 10:15 AM</td><td class="px-6 py-4 text-right"><button class="text-gray-400 hover:text-textmain"><i data-lucide="more-vertical" class="w-4 h-4"></i></button></td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 font-medium text-textmain flex items-center gap-3"><i data-lucide="webhook" class="w-4 h-4 text-accent"></i> hooks.n8n/webhook/...</td><td class="px-6 py-4">Webhook (n8n)</td>
+                                    <td class="px-6 py-4"><span class="px-2 py-1 bg-success/10 text-success text-xs font-semibold rounded-full border border-success/20">Monitoreando</span></td>
+                                    <td class="px-6 py-4 text-xs">Ayer, 18:42 PM</td><td class="px-6 py-4 text-right"><button class="text-gray-400 hover:text-textmain"><i data-lucide="more-vertical" class="w-4 h-4"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 3. EJECUTAR ESCANEO (Nuevo Escaneo Completo) -->
+                <div id="view-scan" class="view-section fade-in hidden">
+                    <div class="flex border-b border-gray-200 mb-6">
+                        <button class="px-4 py-2 text-sm font-semibold text-primary border-b-2 border-primary">Desde repositorio</button>
+                        <button class="px-4 py-2 text-sm font-medium text-textsec hover:text-textmain">Desde URL</button>
+                        <button onclick="switchView('n8n', 'Workflows n8n')" class="px-4 py-2 text-sm font-medium text-textsec hover:text-textmain flex items-center gap-2"><i data-lucide="webhook" class="w-4 h-4"></i> Webhook Guard</button>
+                    </div>
+                    <div class="grid lg:grid-cols-2 gap-8">
+                        <div class="bg-surface p-6 rounded-xl border border-gray-100 shadow-card">
+                            <h3 class="text-base font-semibold mb-4">Nuevo escaneo de código</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-textmain mb-1">Proveedor de Git</label>
+                                    <select class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-accent outline-none text-sm bg-white"><option>GitHub</option><option>GitLab</option></select>
+                                </div>
+                                <div><label class="block text-sm font-medium text-textmain mb-1">Repositorio</label><input type="text" value="acme/payments-service" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-accent"></div>
+                                <div><label class="block text-sm font-medium text-textmain mb-1">Rama</label><input type="text" value="main" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm outline-none focus:ring-2 focus:ring-accent"></div>
+                                <button class="w-full bg-secondary text-white font-semibold py-2.5 rounded-lg flex justify-center items-center gap-2"><i data-lucide="zap" class="w-4 h-4"></i> Conectar y escanear</button>
+                            </div>
+                        </div>
+                        <div class="bg-surface p-6 rounded-xl border border-gray-100 shadow-card flex flex-col justify-center">
+                            <div class="flex justify-between items-center mb-6"><h3 class="text-base font-semibold text-primary">Escaneando acme/payments-service</h3><span class="text-2xl font-bold text-accent">63%</span></div>
+                            <div class="w-full bg-gray-100 rounded-full h-2.5 mb-6"><div class="bg-accent h-2.5 rounded-full" style="width: 63%"></div></div>
+                            <ul class="space-y-3 text-sm text-textsec mb-6">
+                                <li class="flex items-center gap-3 text-success"><i data-lucide="check-circle" class="w-4 h-4"></i> Analizando dependencias (SCA)</li>
+                                <li class="flex items-center gap-3 text-success"><i data-lucide="check-circle" class="w-4 h-4"></i> Revisando infraestructura (IaC)</li>
+                                <li class="flex items-center gap-3 text-textmain font-medium"><i data-lucide="loader-2" class="w-4 h-4 animate-spin text-accent"></i> Buscando secretos expuestos</li>
+                            </ul>
+                            <div class="bg-gray-50 p-4 rounded-lg flex justify-between items-center border border-gray-100">
+                                <div><p class="text-xs text-gray-500">Archivos</p><p class="font-semibold text-textmain">1,248 / 2,036</p></div>
+                                <div class="text-right"><p class="text-xs text-gray-500">Transcurrido</p><p class="font-mono text-sm text-textmain">00:01:42</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. GESTIÓN DE HALLAZGOS (Completo) -->
+                <div id="hallazgos" class="view-section fade-in hidden">
+                    <div class="flex gap-4 mb-6">
+                        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm bg-surface"><option>Severidad: Todas</option><option>Crítica</option><option>Alta</option></select>
+                        <select class="px-4 py-2 border border-gray-300 rounded-lg text-sm bg-surface"><option>Estado: Abierto</option><option>Resuelto</option></select>
+                        <button class="bg-surface border border-gray-300 px-4 py-2 rounded-lg text-sm hover:bg-gray-50 ml-auto flex items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> Exportar CSV</button>
+                    </div>
+                    <div class="grid gap-4">
+                        <div onclick="switchView('view-finding', 'Fix Coach')" class="bg-surface p-5 border border-gray-100 rounded-xl shadow-card flex justify-between items-center hover:border-accent transition cursor-pointer">
+                            <div class="flex items-start gap-4">
+                                <div class="mt-1 px-2 py-1 rounded border border-danger text-danger text-[10px] font-bold uppercase flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-danger"></div> Crítico</div>
+                                <div>
+                                    <h4 class="text-base font-semibold text-textmain">Hardcoded AWS Secret Detectado</h4>
+                                    <p class="text-xs text-textsec mt-1">Repo: <span class="font-mono bg-gray-100 px-1 rounded">payments-api</span> • Archivo: <span class="font-mono bg-gray-100 px-1 rounded">config/services.yml</span></p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4"><span class="text-xs text-gray-400">Detectado hace 2h</span><button class="text-primary hover:bg-primary/10 px-3 py-1.5 rounded text-sm font-medium transition">Fix Coach &rarr;</button></div>
+                        </div>
+                        <div onclick="switchView('view-finding', 'Fix Coach')" class="bg-surface p-5 border border-gray-100 rounded-xl shadow-card flex justify-between items-center hover:border-accent transition cursor-pointer">
+                            <div class="flex items-start gap-4">
+                                <div class="mt-1 px-2 py-1 rounded border border-warning text-warning text-[10px] font-bold uppercase flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-warning"></div> Alto</div>
+                                <div>
+                                    <h4 class="text-base font-semibold text-textmain">Falta validación de firma en Webhook (n8n)</h4>
+                                    <p class="text-xs text-textsec mt-1">Activo: <span class="font-mono bg-gray-100 px-1 rounded">Webhook CRM</span> • Impacto: Falsificación de leads</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4"><span class="text-xs text-gray-400">Detectado ayer</span><button class="text-primary hover:bg-primary/10 px-3 py-1.5 rounded text-sm font-medium transition">Fix Coach &rarr;</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. FIX COACH DETALLE (Completo) -->
+                <div id="view-finding" class="view-section fade-in hidden">
+                    <div class="flex items-center gap-2 text-sm text-textsec mb-6">
+                        <button onclick="switchView('hallazgos', 'Gestión de Hallazgos')" class="hover:text-primary">Hallazgos</button> <i data-lucide="chevron-right" class="w-4 h-4"></i> <span>api-backend</span> <i data-lucide="chevron-right" class="w-4 h-4"></i> <span class="font-semibold text-textmain">SQL Injection</span>
+                    </div>
+                    <div class="grid lg:grid-cols-2 gap-6">
+                        <div class="bg-surface rounded-xl border border-gray-100 shadow-card flex flex-col">
+                            <div class="p-5 border-b border-gray-100 flex gap-3 items-center"><span class="bg-danger/10 text-danger text-xs font-bold px-2.5 py-1 rounded-md border border-danger/20">CRÍTICO</span><h2 class="text-lg font-bold">SQL Injection en /users</h2></div>
+                            <div class="p-5 flex-1">
+                                <h4 class="text-sm font-semibold mb-2">Descripción</h4><p class="text-sm text-textsec mb-6">La entrada del usuario no está siendo sanitizada, permitiendo inyección de comandos en la BD.</p>
+                                <div class="flex justify-between items-center mb-2"><h4 class="text-sm font-semibold">Evidencia</h4><span class="text-xs text-textsec">app/routes/users.py : L128</span></div>
+                                <div class="bg-[#1E1E1E] rounded-lg p-4 font-mono text-sm overflow-x-auto text-gray-300 shadow-inner">
+                                    <div class="flex"><span class="text-gray-500 w-8 select-none">126</span><span><span class="text-blue-400">user_id</span> = request.args.get(<span class="text-orange-300">'id'</span>)</span></div>
+                                    <div class="flex bg-danger/20 -mx-4 px-4 py-0.5 border-l-2 border-danger"><span class="text-gray-500 w-8 select-none">127</span><span><span class="text-blue-400">query</span> = <span class="text-orange-300">f"SELECT * FROM users WHERE id = {user_id}"</span></span></div>
+                                    <div class="flex"><span class="text-gray-500 w-8 select-none">128</span><span>cursor.execute(query)</span></div>
+                                </div>
+                                <div class="mt-6 grid grid-cols-3 gap-4 border-t border-gray-100 pt-6">
+                                    <div><p class="text-xs text-gray-500">Detectado</p><p class="text-sm font-medium">Escaneo #8723</p></div>
+                                    <div><p class="text-xs text-gray-500">CVSS Score</p><p class="text-sm font-medium text-danger">9.8 (Alto)</p></div>
+                                    <div><p class="text-xs text-gray-500">Estado</p><p class="text-sm font-medium">Abierto</p></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-surface rounded-xl border-2 border-accent shadow-card flex flex-col relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-accent opacity-10 rounded-full blur-2xl"></div>
+                            <div class="p-5 border-b border-gray-100 bg-accent/5 flex justify-between items-center">
+                                <div class="flex items-center gap-2 text-accent font-bold"><i data-lucide="sparkles" class="w-5 h-5"></i> Fix Coach (IA)</div>
+                                <div class="flex gap-2"><button class="px-3 py-1.5 text-xs font-medium border bg-white rounded hover:bg-gray-50">Ignorar</button><button class="px-3 py-1.5 text-xs font-medium bg-accent text-white rounded hover:bg-accent/90">Re-test</button></div>
+                            </div>
+                            <div class="p-5 flex-1">
+                                <p class="text-sm text-textmain mb-4">Usa consultas parametrizadas o un ORM para evitar que el input modifique la estructura del query.</p>
+                                <h4 class="text-xs font-semibold uppercase text-textsec mb-2">Solución (Python + SQLAlchemy)</h4>
+                                <div class="bg-[#1E1E1E] rounded-lg p-4 font-mono text-sm overflow-x-auto text-gray-300 mb-4">
+                                    <div><span class="text-purple-400">from</span> sqlalchemy <span class="text-purple-400">import</span> text</div><br>
+                                    <div><span class="text-blue-400">query</span> = text(<span class="text-orange-300">"SELECT * FROM users WHERE id = :id"</span>)</div>
+                                    <div><span class="text-blue-400">result</span> = db.session.execute(query, {<span class="text-orange-300">"id"</span>: user_id})</div>
+                                </div>
+                                <button class="w-full bg-textmain hover:bg-black text-white text-sm font-semibold py-2.5 rounded-lg flex justify-center gap-2 mb-6">Copiar código <i data-lucide="copy" class="w-4 h-4"></i></button>
+                                <h4 class="text-sm font-semibold mb-2">Recursos</h4>
+                                <ul class="text-sm space-y-2 text-accent">
+                                    <li><a href="#" class="hover:underline flex items-center gap-1"><i data-lucide="external-link" class="w-3 h-3"></i> OWASP SQL Injection Prevention</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. REGRESIONES (Completo) -->
+                <div id="regresiones" class="view-section fade-in hidden">
+                    <div class="bg-warning/10 border border-warning/20 p-4 rounded-xl mb-6 flex gap-3">
+                        <i data-lucide="info" class="w-5 h-5 text-warning shrink-0 mt-0.5"></i>
+                        <div><h4 class="text-sm font-semibold text-textmain">¿Qué es una regresión?</h4><p class="text-xs text-textsec mt-1">Vulnerabilidades marcadas como "Resueltas" que han vuelto a aparecer tras un nuevo commit.</p></div>
+                    </div>
+                    <div class="bg-surface border border-gray-100 rounded-xl shadow-card p-5 border-l-4 border-l-warning">
+                        <div class="flex justify-between items-start mb-2"><h4 class="text-base font-semibold text-textmain">Dependencia Vulnerable Re-introducida</h4><span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">Reapareció hoy</span></div>
+                        <p class="text-sm text-textsec mb-4">La librería <code class="bg-gray-100 px-1 rounded">lodash v4.17.15</code> fue reintroducida en package-lock.json.</p>
+                        <div class="flex items-center gap-4 text-xs"><span class="text-gray-500 flex items-center gap-1"><i data-lucide="history" class="w-3 h-3"></i> Resuelto hace 15 días</span><button class="text-accent hover:underline font-semibold">Abrir Jira Ticket</button></div>
+                    </div>
+                </div>
+
+                <!-- 7. HISTORIAL ESCANEOS (Completo) -->
+                <div id="escaneos" class="view-section fade-in hidden">
+                    <div class="bg-surface border border-gray-100 rounded-xl shadow-card overflow-hidden">
+                        <table class="w-full text-left text-sm text-textsec">
+                            <thead class="bg-gray-50 text-xs uppercase text-gray-500"><tr><th class="px-6 py-4">ID</th><th class="px-6 py-4">Objetivo</th><th class="px-6 py-4">Fecha</th><th class="px-6 py-4">Estado</th><th class="px-6 py-4 text-center">Hallazgos</th><th class="px-6 py-4"></th></tr></thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr><td class="px-6 py-4 font-mono text-xs">#SCN-8724</td><td class="px-6 py-4 font-medium text-textmain">acme/payments-api</td><td class="px-6 py-4">Hace 2 horas</td><td class="px-6 py-4"><span class="flex items-center gap-1 text-success text-xs font-semibold"><i data-lucide="check-circle" class="w-3 h-3"></i> Completado</span></td><td class="px-6 py-4 text-center"><span class="text-danger font-bold">2</span></td><td class="px-6 py-4 text-right"><button class="text-accent text-xs font-semibold hover:underline">Ver reporte</button></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 8. PROGRAMACIÓN PRO (Completo) -->
+                <div id="view-pro" class="view-section fade-in hidden">
+                    <div class="max-w-3xl mx-auto">
+                        <div class="text-center mb-8"><div class="inline-flex w-12 h-12 bg-warning/20 text-warning rounded-xl items-center justify-center mb-4"><i data-lucide="calendar-clock" class="w-6 h-6"></i></div><h2 class="text-2xl font-bold text-textmain">Automatiza tus validaciones (Plan PRO)</h2></div>
+                        <div class="bg-surface rounded-xl border border-gray-100 shadow-card p-6 md:p-8">
+                            <form class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Selecciona los activos</label>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <label class="flex items-center p-4 border border-accent bg-accent/5 rounded-lg cursor-pointer"><input type="checkbox" checked class="w-4 h-4 text-accent accent-accent mr-3"><span class="text-sm font-semibold">Repositorios</span></label>
+                                        <label class="flex items-center p-4 border border-gray-200 hover:bg-gray-50 rounded-lg cursor-pointer"><input type="checkbox" checked class="w-4 h-4 text-accent accent-accent mr-3"><span class="text-sm font-semibold">Webhooks</span></label>
+                                    </div>
+                                </div>
+                                <div><label class="block text-sm font-medium mb-2">Frecuencia</label><select class="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none text-sm"><option>Diario (12:00 AM UTC)</option><option>Semanal</option></select></div>
+                                <div class="border-t border-gray-100 pt-6">
+                                    <label class="block text-sm font-medium mb-2">Acciones ante regresiones</label>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center"><input type="checkbox" checked class="w-4 h-4 text-warning accent-warning mr-3"><span class="text-sm">Enviar alerta por Email</span></label>
+                                        <label class="flex items-center"><input type="checkbox" checked class="w-4 h-4 text-warning accent-warning mr-3"><span class="text-sm">Crear ticket en Jira</span></label>
+                                    </div>
+                                </div>
+                                <button type="button" class="w-full bg-warning hover:bg-yellow-600 text-white font-bold py-3 rounded-lg shadow-md flex justify-center items-center gap-2 mt-4">Guardar Calendario <i data-lucide="check" class="w-5 h-5"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 9. WORKFLOWS N8N (Completo) -->
+                <div id="n8n" class="view-section fade-in hidden">
+                    <div class="grid lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-1 bg-surface p-6 rounded-xl border border-gray-100 shadow-card h-fit">
+                            <div class="w-12 h-12 bg-accent/10 text-accent rounded-xl flex items-center justify-center mb-4"><i data-lucide="git-merge" class="w-6 h-6"></i></div>
+                            <h3 class="text-base font-semibold mb-2">Registrar Webhook n8n</h3>
+                            <p class="text-xs text-textsec mb-4">Ingresa la URL de tu workflow para validarlo contra el Checklist de Hardening.</p>
+                            <input type="text" placeholder="https://hooks.tu-n8n.com/..." class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg outline-none mb-3">
+                            <button class="w-full bg-accent text-white font-medium py-2 rounded-lg text-sm">Evaluar seguridad</button>
+                        </div>
+                        <div class="lg:col-span-2 space-y-4">
+                            <h3 class="text-base font-semibold">Score de Webhooks Activos</h3>
+                            <div class="bg-surface p-5 border border-gray-100 rounded-xl shadow-card flex items-center justify-between">
+                                <div><h4 class="font-semibold text-sm">Ingreso de Leads CRM</h4><p class="text-xs text-gray-500 font-mono mt-1">/webhook/leads</p></div>
+                                <div class="flex items-center gap-6">
+                                    <div class="text-right hidden sm:block"><p class="text-xs text-textsec mb-1">Checklist completado</p><p class="text-sm font-semibold">4 / 5 reglas</p></div>
+                                    <div class="w-14 h-14 rounded-full border-4 border-gray-100 border-t-success border-r-success flex items-center justify-center transform rotate-45"><span class="transform -rotate-45 text-sm font-bold">85</span></div>
+                                </div>
+                            </div>
+                            <div class="bg-surface p-5 border border-danger/30 rounded-xl shadow-card flex items-center justify-between bg-red-50/30">
+                                <div><h4 class="font-semibold text-sm">Deploy en Producción</h4><p class="text-xs text-gray-500 font-mono mt-1">/webhook/deploy</p></div>
+                                <div class="flex items-center gap-6">
+                                    <div class="text-right hidden sm:block"><p class="text-xs text-danger font-medium mb-1">Falta firma y rate limit</p><p class="text-sm font-semibold">2 / 5 reglas</p></div>
+                                    <div class="w-14 h-14 rounded-full border-4 border-gray-100 border-t-danger flex items-center justify-center transform rotate-45"><span class="transform -rotate-45 text-sm font-bold">40</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 10. SDK ENTERPRISE (Completo) -->
+                <div id="view-enterprise" class="view-section fade-in hidden">
+                    <div class="mb-8 flex justify-between items-end">
+                        <div><h2 class="text-2xl font-bold flex items-center gap-2">Agente Enterprise <span class="bg-gray-800 text-white text-[10px] uppercase px-2 py-0.5 rounded">Runtime</span></h2><p class="text-textsec mt-1">Confirma vulnerabilidades con telemetría real (Runtime).</p></div>
+                    </div>
+                    <div class="bg-surface rounded-xl border border-gray-100 shadow-card">
+                        <div class="p-6 border-b border-gray-100 flex gap-6">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">1</div>
+                            <div class="flex-1"><h3 class="text-base font-semibold mb-2">Generar Token</h3><div class="flex"><input type="text" readonly value="sop_live_9a8b_ent" class="flex-1 bg-gray-50 border rounded-l-lg px-4 py-2 font-mono text-sm"><button class="bg-gray-800 text-white px-4 py-2 rounded-r-lg">Copiar</button></div></div>
+                        </div>
+                        <div class="p-6 border-b border-gray-100 flex gap-6">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold">2</div>
+                            <div class="flex-1"><h3 class="text-base font-semibold mb-2">Instalar en Node.js</h3><div class="bg-[#1E1E1E] rounded-lg p-4 font-mono text-sm text-gray-300"><p><span class="text-green-400">npm</span> install @sentinelops/agent-node</p><br><p><span class="text-purple-400">require</span>('@sentinelops/agent').start({ token: process.env.TOKEN });</p></div></div>
+                        </div>
+                        <div class="p-6 flex gap-6 bg-gray-50 rounded-b-xl">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold">3</div>
+                            <div class="flex-1 flex items-center justify-between"><div><h3 class="text-base font-semibold">Verificar conexión</h3><p class="text-sm text-textsec">Esperando Heartbeat de producción.</p></div><div class="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg shadow-sm"><span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-warning"></span></span><span class="text-sm font-medium">Esperando...</span></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 11. INTEGRACIONES (Completo) -->
+                <div id="integraciones" class="view-section fade-in hidden">
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-surface p-6 rounded-xl border border-gray-100 shadow-card text-center"><i data-lucide="github" class="w-10 h-10 mx-auto mb-4"></i><h4 class="font-semibold mb-1">GitHub</h4><p class="text-xs text-textsec mb-4">Escaneo automático en PRs.</p><button class="w-full border px-4 py-2 rounded-lg text-sm font-medium flex justify-center items-center gap-2"><div class="w-2 h-2 rounded-full bg-success"></div> Conectado</button></div>
+                        <div class="bg-surface p-6 rounded-xl border border-gray-100 shadow-card text-center"><i data-lucide="slack" class="w-10 h-10 mx-auto mb-4"></i><h4 class="font-semibold mb-1">Slack</h4><p class="text-xs text-textsec mb-4">Alertas al canal.</p><button class="w-full border px-4 py-2 rounded-lg text-sm font-medium flex justify-center items-center gap-2"><div class="w-2 h-2 rounded-full bg-success"></div> Conectado</button></div>
+                        <div class="bg-surface p-6 rounded-xl border border-gray-100 shadow-card text-center"><i data-lucide="trello" class="w-10 h-10 mx-auto text-gray-400 mb-4"></i><h4 class="font-semibold mb-1">Jira</h4><p class="text-xs text-textsec mb-4">Tickets automáticos.</p><button class="w-full bg-secondary text-white px-4 py-2 rounded-lg text-sm font-medium">Conectar</button></div>
+                    </div>
+                </div>
+
+                <!-- 12. ALERTAS (Completo) -->
+                <div id="alertas" class="view-section fade-in hidden">
+                    <div class="bg-surface border border-gray-100 rounded-xl shadow-card max-w-3xl">
+                        <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50"><h3 class="font-semibold text-sm">Notificaciones</h3><button class="text-xs text-accent hover:underline">Marcar como leído</button></div>
+                        <div class="divide-y divide-gray-100">
+                            <div class="p-4 flex gap-4 bg-white"><div class="w-8 h-8 rounded-full bg-danger/10 text-danger flex shrink-0 items-center justify-center"><i data-lucide="shield-alert" class="w-4 h-4"></i></div><div><p class="text-sm font-medium text-textmain">Nuevo hallazgo CRÍTICO detectado</p><p class="text-xs text-textsec mt-1">Secreto expuesto en api-backend.</p><p class="text-[10px] text-gray-400 mt-1">Hace 12 min</p></div></div>
+                            <div class="p-4 flex gap-4 bg-white"><div class="w-8 h-8 rounded-full bg-success/10 text-success flex shrink-0 items-center justify-center"><i data-lucide="check" class="w-4 h-4"></i></div><div><p class="text-sm text-textmain">Escaneo programado exitoso</p><p class="text-[10px] text-gray-400 mt-1">Hace 3 horas</p></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 13. PERFIL (Completo) -->
+                <div id="perfil" class="view-section fade-in hidden">
+                    <div class="max-w-2xl bg-surface border border-gray-100 rounded-xl shadow-card p-6 md:p-8">
+                        <div class="flex items-center gap-6 mb-8 pb-8 border-b border-gray-100"><img src="https://api.dicebear.com/7.x/notionists/svg?seed=Carlos" class="w-20 h-20 rounded-full border-2 border-gray-100"><div><h2 class="text-xl font-bold">Carlos Ramírez</h2><p class="text-sm text-textsec mb-2">CTO en Acme Corp</p><button class="text-xs border px-3 py-1 rounded hover:bg-gray-50">Cambiar avatar</button></div></div>
+                        <form class="space-y-4">
+                            <div class="grid sm:grid-cols-2 gap-4"><div><label class="block text-xs font-medium text-textsec mb-1">Nombre</label><input type="text" value="Carlos Ramírez" class="w-full px-3 py-2 text-sm border rounded outline-none focus:border-accent"></div><div><label class="block text-xs font-medium text-textsec mb-1">Email</label><input type="email" value="carlos@pyme.dev" readonly class="w-full px-3 py-2 text-sm border bg-gray-50 rounded text-gray-500"></div></div>
+                            <div><label class="block text-xs font-medium text-textsec mb-1">Plan Actual</label><div class="flex justify-between items-center px-4 py-3 border border-warning rounded bg-warning/5"><div><p class="text-sm font-bold text-warning">PRO</p></div><button type="button" class="text-xs border border-warning text-warning font-semibold px-3 py-1.5 rounded bg-white">Gestionar Facturación</button></div></div>
+                            <div class="pt-4"><button type="button" class="bg-primary text-white px-6 py-2 rounded-lg text-sm font-medium">Guardar cambios</button></div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- SCRIPT DE ROUTING Y GRAFICAS -->
+    <script>
+        lucide.createIcons();
+        let chartsRendered = false;
+
+        // Login Flow
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-login');
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto"></i>';
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('app-view').classList.remove('hidden');
+                switchView('dashboard', 'Resumen', 'Vista general de tu postura de seguridad');
+            }, 800);
+        });
+
+        // SPA Router
+        function switchView(viewId, title, subtitle = '') {
+            // Hide all sections
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.remove('block'); el.classList.add('hidden');
+            });
+            // Show Target
+            document.getElementById(viewId).classList.remove('hidden');
+            document.getElementById(viewId).classList.add('block');
+            
+            // Update Headers
+            document.getElementById('topbar-title').innerText = title;
+            const sub = document.getElementById('topbar-subtitle');
+            if(sub) sub.innerText = subtitle;
+
+            // Update Nav State
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white/10', 'border-l-4', 'border-accent', 'text-white');
+                btn.classList.add('text-gray-300'); // Reset text color
+            });
+            const activeNav = document.getElementById('nav-' + viewId);
+            if(activeNav) {
+                activeNav.classList.add('bg-white/10', 'border-l-4', 'border-accent', 'text-white');
+                activeNav.classList.remove('text-gray-300');
+            }
+
+            // Init charts ONLY on dashboard load to prevent canvas zero-size bug
+            if(viewId === 'dashboard' && !chartsRendered) {
+                renderCharts();
+                chartsRendered = true;
+            }
+        }
+
+        // Chart.js Init
+        function renderCharts() {
+            // Line Chart
+            const ctxTrend = document.getElementById('trendChart').getContext('2d');
+            const gradient = ctxTrend.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(0, 178, 169, 0.2)'); 
+            gradient.addColorStop(1, 'rgba(0, 178, 169, 0)');
+            
+            new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: ['7 May', '8 May', '9 May', '10 May', '11 May', '12 May', '13 May'],
+                    datasets: [{
+                        data: [65, 62, 58, 60, 68, 75, 72], 
+                        borderColor: '#00B2A9', 
+                        backgroundColor: gradient, 
+                        borderWidth: 2,
+                        pointBackgroundColor: '#FFFFFF',
+                        pointBorderColor: '#00B2A9',
+                        pointRadius: 4,
+                        fill: true, 
+                        tension: 0.4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } } }
+            });
+
+            // Doughnut Chart
+            const ctxSev = document.getElementById('severityChart').getContext('2d');
+            new Chart(ctxSev, {
+                type: 'doughnut',
+                data: { 
+                    labels: ['Crítico', 'Alto', 'Medio', 'Bajo'], 
+                    datasets: [{ data: [4, 28, 68, 86], backgroundColor: ['#DC2626', '#F59E0B', '#FBBF24', '#16A34A'], borderWidth: 0 }] 
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
+            });
+        }
+    </script>
+</body>
+</html>
